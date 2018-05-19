@@ -1,39 +1,78 @@
+module Farey where
+import           BinaryTrees
 
-import           Graphics.Gloss
+data Fraction  = F Integer Integer
+data SternTerm = L | R deriving (Eq, Show)
+type SternPath = [SternTerm]
 
-data Fraction = F Int Int
-instance Show Fraction where
-    show (F n d) = show n ++ "/" ++ show d
-data BinTree a = Empty | Node a (BinTree a) (BinTree a) deriving (Show)
+instance Show Fraction where show (F n d) = show n ++ "/" ++ show d
 
--- nearest left, value,, nearest right
+
+-- nearest left, value, nearest right
 type Data = (Fraction, Fraction, Fraction)
 
-buildBrocTree :: Int -> BinTree Data
-buildBrocTree = build (Node (F 0 1, F 1 1, F 1 0) Empty Empty) where
-            build :: BinTree Data -> Int -> BinTree Data
+mediant :: Fraction -> Fraction -> Fraction
+mediant (F a b) (F c d) = F (n `div` gDiv) (d `div` gDiv) where
+    n = a + c
+    d = b + d
+    gDiv = gcd n d
+
+reduce :: Fraction -> Fraction
+reduce (F p q) = F p' q'
+    where p' = p `div` gDiv
+          q' = q `div` gDiv
+          gDiv = gcd p q
+
+lessThan :: Fraction -> Fraction -> Bool
+lessThan (F m n ) (F p q) =  m * q < n * p
+
+
+buildBrocTreeLazy :: BTree Data
+buildBrocTreeLazy = build (BNode (F 0 1, F 1 1, F 1 0) Empty Empty) where
+            build :: BTree Data -> BTree Data
+            build (BNode nd@(F v w, F a b, F x y) Empty Empty) = build (BNode nd newLeft newRight) where
+                        newLeft  = BNode ( F v w , F (a + v) (b + w), F a b ) Empty Empty
+                        newRight = BNode ( F a b , F (a + x) (b + y), F x y ) Empty Empty
+            build (BNode nd l r) = BNode nd (build l) (build r)
+
+
+buildBrocTree :: Int -> BTree Data
+buildBrocTree = build (BNode (F 0 1, F 1 1, F 1 0) Empty Empty) where
+            build :: BTree Data -> Int -> BTree Data
             build t 0  = t
-            build (Node nd@(F v w, F a b, F x y) Empty Empty) n = build (Node nd newLeft newRight) (n - 1) where
-                    newLeft  = Node ( F v w , F (a + v) (b + w), F a b ) Empty Empty
-                    newRight = Node ( F a b , F (a + x) (b + y), F x y ) Empty Empty
-            build (Node nd l r) n = Node nd (build l n) (build r n)
+            build (BNode nd@(F v w, F a b, F x y) Empty Empty) n = build (BNode nd newLeft newRight) (n - 1) where
+                         newLeft   = BNode ( F v w , F (a + v) (b + w), F a b ) Empty Empty
+                         newRight  = BNode ( F a b , F (a + x) (b + y), F x y ) Empty Empty
+            build (BNode nd l r) n = BNode nd (build l n) (build r n)
 
-traverseBFirst :: BinTree Data -> [Fraction]
-traverseBFirst tree = go [tree]
-    where
-        go [] = []
-        go xs = fmap nodeVal xs ++ go (concatMap lrSubTrees xs)
-        nodeVal (Node (x, v, z) _ _) = v
-        lrSubTrees (Node _ Empty Empty) = []
-        lrSubTrees (Node _ Empty b)     = [b]
-        lrSubTrees (Node _ a Empty)     = [a]
-        lrSubTrees (Node _ a b)         = [a,b]
+buildBrocTreeSmaller :: Int -> BTree Data
+buildBrocTreeSmaller = build (BNode (F 0 1, F 1 1, F 1 0) Empty Empty) where
+            build :: BTree Data -> Int -> BTree Data
+            build t 0  = t
+            build (BNode nd@(F v w, F a b, F x y) Empty Empty) n
+             | a > b = Empty
+             | otherwise =  build (BNode nd newLeft newRight) (n - 1) where
+                         newLeft   = BNode ( F v w , F (a + v) (b + w), F a b ) Empty Empty
+                         newRight  = BNode ( F a b , F (a + x) (b + y), F x y ) Empty Empty
+            build (BNode nd l r) n = BNode nd (build l n) (build r n)
 
-add :: Fraction -> Fraction -> Fraction
-add (F n d) (F n' d') =  reduce $ F (n + n') (d + d')
 
-reduce :: Fraction  -> Fraction
-reduce (F n d) = F (n `div` gc ) (d `div` gc) where gc = gcd n d :: Int
+sternPath :: Fraction -> ([Fraction], SternPath)
+sternPath frac = (reverse fPath, reverse sPath) where
+    (fPath, sPath) = go buildBrocTreeLazy fr  ([],[]) where
+        fr = reduce frac
+        go (BNode (_, F p q, _) l r) (F n d) (frs,path)
+            | p == n && q == d = (F p q : frs, path)
+            | lessThan (F p q) (F n d) = go r fr (F p q : frs, R : path)
+            | otherwise                = go l fr (F p q : frs, L : path)
+
+
+fractionPath :: SternPath -> [Fraction]
+fractionPath  = go buildBrocTreeLazy  where
+    go :: BTree Data -> SternPath -> [Fraction]
+    go (BNode (_, frac, _) _ _) []     = [frac]
+    go (BNode (_, frac, _) l r) (p:ps) = frac : go (pick p l r) ps where
+        pick p l r = if p == L then l else r
 
 farey :: Int -> [(Int, Int)]
 farey n = farey' (0, 1) (1, n) where
@@ -52,14 +91,4 @@ fordCircle (p, q) = (r, fromIntegral p / fromIntegral q, r ) where
 fordCircles = fmap fordCircle . farey
 
 
-window :: Display
-window = InWindow "Nice Window" (200, 200) (10, 10)
 
-background :: Color
-background = white
-
-drawing :: Picture
-drawing = circle 80
-
-main :: IO ()
-main = display window background drawing
