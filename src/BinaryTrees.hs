@@ -1,4 +1,5 @@
 module BinaryTrees where
+import           Data.List (sort)
 
 data BTree a = Empty | BNode a (BTree a) (BTree a)
 
@@ -33,6 +34,7 @@ traverseBreadthFirst tree = go [tree]
         lrSubTrees (BNode _ a b)         = [a,b]
 
 
+
 traverseInOrder :: BTree a -> [a]
 traverseInOrder Empty         = []
 traverseInOrder (BNode v l r) = traverseInOrder l ++ [v] ++ traverseInOrder r
@@ -40,6 +42,10 @@ traverseInOrder (BNode v l r) = traverseInOrder l ++ [v] ++ traverseInOrder r
 traversePreOrder :: BTree a -> [a]
 traversePreOrder Empty         = []
 traversePreOrder (BNode v l r) = v : traversePreOrder l ++ traversePreOrder r
+
+traversePostOrder :: BTree a -> [a]
+traversePostOrder Empty         = []
+traversePostOrder (BNode v l r) = traversePostOrder l ++ traversePostOrder r ++ [v]
 
 depth :: BTree a -> Int
 depth Empty         = 0
@@ -55,10 +61,24 @@ width t = leftCount t + rightCount t where
         goRight (BNode _ _ r    ) n = goRight r (n + 1)
 
 
+
+
 treeFromList :: (Ord a) => [a] -> BTree a
-treeFromList [] = Empty
-treeFromList (x:xs) = BNode x (treeFromList (filter (<x) xs))
-                              (treeFromList (filter (>=x) xs))
+treeFromList lst = go (sort lst) where
+        go [] = Empty
+        go xs = BNode (xs !! half)
+                  (go $ take half xs)
+                  (go $ drop (half + 1) xs)
+                where
+                  len = length xs
+                  half = len `div` 2
+
+insert :: (Eq a, Ord a) => BTree a -> a -> BTree a
+insert Empty x = BNode x Empty Empty
+insert (BNode a left right) x
+    | x == a = BNode a left right
+    | x < a  = BNode a (insert left x) right
+    | x > a  = BNode a left (insert right x)
 
 printTree :: (Show a) => BTree a -> IO ()
 printTree t = putStrLn $ prettyTree t
@@ -68,18 +88,17 @@ prettyTree = unlines . layoutTree where
     indent = fmap ("  "++)
     layoutTree Empty = []
     layoutTree (BNode v left  right) = indent (layoutTree right) ++ [show v] ++ indent (layoutTree left)
--- In this layout strategy, the position of a node v is obtained by the following two rules:
+
 
 -- x(v) is equal to the position of the node v in the inorder sequence
 -- y(v) is equal to the depth of the node v in the tree
 type Pos = (Int, Int)
 layout :: BTree a -> BTree (a, Pos )
--- layout :: Tree a -> Tree (a, Pos)
 layout t = fst (go 1 1 t)
   where go x y Empty = (Empty, x)
-        go x y (BNode a l r) = (BNode (a, (x',y)) l' r', x'')
-          where (l', x')  = go x (y+1) l
-                (r', x'') = go (x'+1) (y+1) r
+        go x y (BNode a l r) = (BNode (a, (x', y)) l' r', x'')
+          where (l', x')  = go x (y + 1) l
+                (r', x'') = go (x' + 1) (y + 1) r
 
 layoutCompact :: BTree a -> BTree (a, Pos)
 layoutCompact t = t'
@@ -89,8 +108,8 @@ layoutCompact t = t'
         layoutAux :: Int -> Int -> BTree a -> ([Int], BTree (a, Pos), [Int])
         layoutAux x y Empty = ([], Empty, [])
         layoutAux x y (BNode a l r) = (ll', BNode (a, (x,y)) l' r', rr')
-          where (ll, l', lr) = layoutAux (x-sep) (y+1) l
-                (rl, r', rr) = layoutAux (x+sep) (y+1) r
+          where (ll, l', lr) = layoutAux (x - sep) (y+1) l
+                (rl, r', rr) = layoutAux (x + sep) (y+1) r
                 sep = maximum (0:zipWith (+) lr rl) `div` 2 + 1
                 ll' = 0 : overlay (map (+sep) ll) (map (subtract sep) rl)
                 rr' = 0 : overlay (map (+sep) rr) (map (subtract sep) lr)
