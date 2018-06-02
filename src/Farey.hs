@@ -153,8 +153,8 @@ sternPath frac = (reverse fPath, reverse sPath) where
             | F p q < F n d      = go r fr (F p q : frs, R : path)
             | otherwise          = go l fr (F p q : frs, L : path)
 
-sternPathDouble :: Double -> SternPath
-sternPathDouble  = go  where
+sternPathFloat :: Float -> SternPath
+sternPathFloat  = go  where
     go d
         | d < 1 = L : go (d / (1 - d))
         | otherwise = R : go (d - 1)
@@ -173,12 +173,23 @@ fractionPath  = go buildBrocTreeLazy  where
 
 
  -- radius 1/(2q2) and centre at (p/q, 1/(2q2))
-fordCircle :: (Int, Int) -> (Double, Double,  Double)
-fordCircle (p, q) = (r, fromIntegral p / fromIntegral q, r ) where
-    r = 1/fromIntegral (2*q*q)
+fordCircle :: Fraction -> (Float, Float, Float)
+fordCircle = fordCircleScaled 1.0
 
--- fordCircles = fmap fordCircle . farey
+-- for Farey of order n
+fordCircles :: Integer -> [(Float, Float, Float)]
+fordCircles = fmap fordCircle . farey
 
+fordCirclesScaled :: Float -> Integer -> [(Float, Float, Float)]
+fordCirclesScaled scale = fmap (fordCircleScaled scale) . farey
+
+midFirst :: (Eq a) => [a] -> [a]
+midFirst xs = nub  (mid:xs) where
+    mid = xs !! (length xs `div` 2)
+ -- Scaled for use in display
+fordCircleScaled :: Float -> Fraction -> (Float, Float,  Float)
+fordCircleScaled fac (F p q) = (r, fac * (fromIntegral p / fromIntegral q), r ) where
+     r = fac /fromIntegral (2*q*q)
 
 divides :: Integer -> Integer -> Bool
 divides d n = rem n d == 0

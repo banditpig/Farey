@@ -10,11 +10,11 @@ instance Functor BTree where
 
 
 foldTree :: (a -> b) ->  BTree a -> [b]
-foldTree f Empty         = []
+foldTree _ Empty         = []
 foldTree f (BNode v l r) = f v : foldTree f l ++ foldTree f r
 
 foldTreeNodes :: (a -> BTree a -> BTree a -> b) ->  BTree a -> [b]
-foldTreeNodes f Empty         = []
+foldTreeNodes _ Empty         = []
 foldTreeNodes f (BNode v l r) = f v l r : foldTreeNodes f l ++ foldTreeNodes f r
 
 
