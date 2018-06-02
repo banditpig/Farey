@@ -3,41 +3,10 @@ import           BinaryTrees
 import           Control.Monad
 import           Data.List
 import           Data.Monoid
+import           Fractions
 
 data SternTerm = L | R deriving (Eq, Show)
 type SternPath = [SternTerm]
-
-data Fraction  = F Integer Integer
-
-instance Show Fraction where show (F n d) = show n ++ "/" ++ show d
-
-instance Eq Fraction where
-    (==) f1@(F m n) f2@(F p q) = m' == p' && n' == q' where
-        F m' n' = reduce f1
-        F p' q' = reduce f2
-
-instance Ord Fraction where
-    (<=) (F m n ) (F p q) =  m * q <= n * p
-    (<)  (F m n ) (F p q) =  m * q < n * p
-
-reduce :: Fraction -> Fraction
-reduce (F p q) = F p' q'
-    where p' = p `div` gDiv
-          q' = q `div` gDiv
-          gDiv = gcd p q
-
-instance Monoid Fraction where
-    mempty = F 0 0
-    mappend (F a b) (F c d) = F (a + c) (b + d)
-
-eval :: Fraction -> Float
-eval (F n d) = fromIntegral n / fromIntegral d
-
-denom :: Fraction -> Integer
-denom (F _ d) = d
-
-numer :: Fraction -> Integer
-numer (F n _) = n
 
 
 dropFirstLast :: [a] -> [a]
@@ -171,25 +140,6 @@ fractionPath  = go buildBrocTreeLazy  where
         pick p l r = if p == L then l else r
 
 
-
- -- radius 1/(2q2) and centre at (p/q, 1/(2q2))
-fordCircle :: Fraction -> (Float, Float, Float)
-fordCircle = fordCircleScaled 1.0
-
--- for Farey of order n
-fordCircles :: Integer -> [(Float, Float, Float)]
-fordCircles = fmap fordCircle . farey
-
-fordCirclesScaled :: Float -> Integer -> [(Float, Float, Float)]
-fordCirclesScaled scale = fmap (fordCircleScaled scale) . farey
-
-midFirst :: (Eq a) => [a] -> [a]
-midFirst xs = nub  (mid:xs) where
-    mid = xs !! (length xs `div` 2)
- -- Scaled for use in display
-fordCircleScaled :: Float -> Fraction -> (Float, Float,  Float)
-fordCircleScaled fac (F p q) = (r, fac * (fromIntegral p / fromIntegral q), r ) where
-     r = fac /fromIntegral (2*q*q)
 
 divides :: Integer -> Integer -> Bool
 divides d n = rem n d == 0
