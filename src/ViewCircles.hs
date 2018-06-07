@@ -1,26 +1,44 @@
 import           Control.Applicative
+import           Data.Complex
+
 import           Data.Monoid
 import           Farey
 import           FordCircles
 import           Graphics.Gloss
+type C = Complex Float
 
--- f(x,y) = ( -(x2+y2-1)/(x2+y2+1) , 2x/(x2+y2+1) )
-planeMap :: [(Float, Float, Float)] -> [(Float, Float, Float)]
+i :: C
+i = 0 :+ 1
+
+fz z = (z - i)/(z + i)
+
+planeMap :: [FordCircle] -> [FordCircle]
 planeMap  = fmap f  where
-    f (r, x, y) = (r, x', y') where
-        x' = (-1)*(x^2 + y^2 - 1)/(x^2 + y^2 + 1)
-        y' = 2*x / ( x^2 + y^2 + 1)
+    f (r, x, y) = (newRad, x', y') where
+        z = x :+ y
+        z1 = (x + r) :+ (y + r)
+        newCenter = fz z
+        newRad = magnitude (newCenter - fz z1)
+        x' = realPart newCenter
+        y' = imagPart newCenter
+
+
+
+
+-- circ :: FordCircle -> Picture
+-- circ (r, x, y) =  translate x y $ color white $ circleSolid r
 
 circ :: FordCircle -> Picture
-circ (r, x, y) =  translate x y $ color white $ circleSolid r
+circ (r, x, y) =  translate x y $ color red $ circle r
 
-makeCircles :: Picture
-makeCircles = Pictures $ fmap (circ . scaleFordCircle 500) (fordCircles 50)
+
+makeCircles :: ([FordCircle] -> [FordCircle]) ->  Picture
+makeCircles f = Pictures $ fmap (circ . scaleFordCircle 100) (f $ fordCircles coPrimes 50)
 
 main :: IO ()
-main =   display
-         FullScreen
-         black $
-         Pictures [makeCircles, translate 500 0 $ rotate 180 makeCircles]
+main = display
+         (InWindow "Window" (1400, 800) (0, 0))
+         white
+         (Pictures [makeCircles planeMap, translate 0 (-250) $ makeCircles id ])
 
 

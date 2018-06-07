@@ -12,10 +12,13 @@ instance Ord Fraction where
     (<=) (F m n ) (F p q) =  m * q <= n * p
     (<)  (F m n ) (F p q) =  m * q < n * p
 reduce :: Fraction -> Fraction
-reduce (F p q) = F p' q'
-    where p' = p `div` gDiv
-          q' = q `div` gDiv
-          gDiv = gcd p q
+reduce (F p q)
+    | q == 0 = F p 0
+    | p < 0 && q < 0 = reduce (F (abs p) (abs q))
+    | otherwise =  F p' q'
+        where p' = p `div` gDiv
+              q' = q `div` gDiv
+              gDiv = gcd p q
 
 instance Monoid Fraction where
     mempty = F 0 0

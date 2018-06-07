@@ -13,6 +13,8 @@ dropFirstLast :: [a] -> [a]
 dropFirstLast xs@(_:_) = tail (init xs)
 dropFirstLast _        = []
 
+coPrimes :: Integer -> [Fraction]
+coPrimes n = sort $ nub [ reduce (F p q) | p <- [-n..n], q <- [-n..n], q /= 0]
 -- Using recurrence relation
 farey :: Integer -> [Fraction]
 farey 1 = [F 0 1, F 1 1]
