@@ -1,63 +1,57 @@
 import           Control.Applicative
+import           Control.Monad
 import           Data.Complex
 import           Data.Monoid
-import           Debug.Trace                          (traceShow)
 import           Farey
 import           FordCircles
+import           Fractions
 import           Graphics.Gloss
 import           Graphics.Gloss.Data.ViewPort
 import           Graphics.Gloss.Interface.IO.Simulate
-type C = Complex Float
-traceShow' arg = traceShow arg arg
+import           Rats
 
-i :: C
+type Cmplx = Complex Float
+
+i :: Cmplx
 i = 0 :+ 1
 
-fz z = (z - i)/(z + i)
+fz :: Cmplx -> Cmplx
+fz z = (z - i)/(z + i)**1.0
+
+makeCircle :: Cmplx -> Cmplx -> Cmplx -> FordCircle
+makeCircle z1 z2 z3 = (r, x, y) where
+    x1 = realPart z1
+    x2 = realPart z2
+    x3 = realPart z3
+    y1 = imagPart z1
+    y2 = imagPart z2
+    y3 = imagPart z3
+    k = 2 * (x1 * (y2 - y3) - y1 * (x2 - x3) + x2 * y3 - x3 * y2)
+    x = ((x1^2 + y1^2) * (y2 - y3) + (x2^2 + y2^2) * (y3 - y1) + (x3^2 + y3^2) * (y1 - y2)) / k
+    y = ((x1^2 + y1^2) * (x3 - x2) + (x2^2 + y2^2) * (x1 - x3) + (x3^2 + y3^2) * (x2 - x1)) / k
+    r = sqrt ((x - x1)^2 + (y - y1)^2)
 
 planeMap :: [FordCircle] -> [FordCircle]
 planeMap  = fmap f  where
-    f (r, x, y) = (newRad, x', y') where
-        z = x :+ y
+    f (r, x, y) = makeCircle (fz z1) (fz z2) (fz z3) where
         z1 = (x + r) :+ y
-        newCenter = fz z
-        newRad = magnitude (newCenter - fz z1)
-        x' = realPart newCenter
-        y' = imagPart newCenter
+        z2 = (x - r) :+ y
+        z3 =  x :+ (y + r)
 
-
-
--- circ :: FordCircle -> Picture
--- circ (r, x, y) =  translate x y $ color white $ circleSolid r
 newColour :: FordCircle -> Color
-newColour (r, x, y) = makeColor  0.6 0.2 0.6 1.0
-
+newColour (r, x, y) = makeColor  (r*5.0) 0.3 0.6 1.0
 
 
 circ :: FordCircle -> Picture
 circ c@(r, x, y) =  translate x y $ color (newColour c)  $ Circle r
 
-
-makeCircles' :: Integer -> ([FordCircle] -> [FordCircle]) ->  Picture
-makeCircles' 0 _ = Blank
-makeCircles' n f = Pictures $ fmap (circ . scaleFordCircle 100) (f $ fordCircles farey n)
-
-makeCircles :: ([FordCircle] -> [FordCircle]) ->  Picture
-makeCircles f = Pictures $ fmap (circ . scaleFordCircle 100) (f $ fordCircles coPrimes 50)
+makeCircles :: [Fraction] -> ([FordCircle] -> [FordCircle]) ->  Picture
+makeCircles cs f =   Pictures $ fmap circ $ f . fordCircles $ cs
 
 main :: IO ()
-main = display
+main = do
+      let cs = makeCircles (coPrimes 25)
+      display
          (InWindow "Window" (1400, 800) (0, 0))
-         (greyN 0.1)
-         (Pictures [makeCircles planeMap, translate 0 (-250)  $ makeCircles id ])
-frame cs t = Pictures $  fmap (circ . scaleFordCircle 250) (take n $ cs)  where
-    n = round (t * 1000) `mod` length cs
-
-
-
--- main :: IO ()
--- main = do
---           let mappedCircs = planeMap $ fmap fordCircle (coPrimes 50)
---           animate (InWindow "Farey" (1400, 800) (20, 20))
---                 (greyN 0.1) (frame mappedCircs)
-
+         (greyN 0.2)
+         (Pictures [scale 100 100 $ cs planeMap, translate 0 (-250) $ scale 100 100 $ cs id])
