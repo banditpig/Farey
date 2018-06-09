@@ -16,7 +16,12 @@ i :: Cmplx
 i = 0 :+ 1
 
 fz :: Cmplx -> Cmplx
-fz z = (z - i)/(z + i)**1.0
+fz z = (z - i)/(z + i)
+
+-- ie fz = fzz 1.0
+--
+fzz :: Float -> Cmplx -> Cmplx
+fzz flt z=  -(z - i)/(z + i)**(flt :+ 0)
 
 makeCircle :: Cmplx -> Cmplx -> Cmplx -> FordCircle
 makeCircle z1 z2 z3 = (r, x, y) where
@@ -38,6 +43,13 @@ planeMap  = fmap f  where
         z2 = (x - r) :+ y
         z3 =  x :+ (y + r)
 
+planeMap' :: Float -> [FordCircle] -> [FordCircle]
+planeMap' fl cs  = fmap f cs where
+    f (r, x, y) = makeCircle (fzz fl z1) (fzz fl z2) (fzz fl z3) where
+        z1 = (x + r) :+ y
+        z2 = (x - r) :+ y
+        z3 =  x :+ (y + r)
+
 newColour :: FordCircle -> Color
 newColour (r, x, y) = makeColor  (r*5.0) 0.3 0.6 1.0
 
@@ -48,10 +60,27 @@ circ c@(r, x, y) =  translate x y $ color (newColour c)  $ Circle r
 makeCircles :: [Fraction] -> ([FordCircle] -> [FordCircle]) ->  Picture
 makeCircles cs f =   Pictures $ fmap circ $ f . fordCircles $ cs
 
+-- main :: IO ()
+-- main = do
+--       let cs = makeCircles (coPrimes 25)
+--       display
+--          (InWindow "Window" (1400, 800) (0, 0))
+--          (greyN 0.2)
+--          (Pictures [scale 100 100 $ cs planeMap, translate 0 (-250) $ scale 100 100 $ cs id])
+frame :: [Fraction] -> Float -> Picture
+frame cs fl = rotate (fl*50) $ scale 250 250 $ makeCircles cs (planeMap' step) where  -- cs planeMap' fl
+  step = if fl * 0.1 >= 1.0
+      then 1.0
+      else fl * 0.1
+
+
+
 main :: IO ()
 main = do
-      let cs = makeCircles (coPrimes 25)
-      display
+      let cs = coPrimes 25 -- [Fraction]
+      animate
          (InWindow "Window" (1400, 800) (0, 0))
          (greyN 0.2)
-         (Pictures [scale 100 100 $ cs planeMap, translate 0 (-250) $ scale 100 100 $ cs id])
+         $ frame cs
+
+
