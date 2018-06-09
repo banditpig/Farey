@@ -1,4 +1,5 @@
 module Fractions where
+import           Data.Ratio
 data Fraction  = F Integer Integer
 
 instance Show Fraction where show (F n d) = show n ++ "/" ++ show d
@@ -14,7 +15,7 @@ instance Ord Fraction where
 reduce :: Fraction -> Fraction
 reduce (F p q)
     | q == 0 = F p 0
-    | p < 0 && q < 0 = reduce (F (abs p) (abs q))
+    | q < 0 = reduce ( F (-p) (abs q))
     | otherwise =  F p' q'
         where p' = p `div` gDiv
               q' = q `div` gDiv
