@@ -13,8 +13,8 @@ dropFirstLast :: [a] -> [a]
 dropFirstLast xs@(_:_) = tail (init xs)
 dropFirstLast _        = []
 
-coPrimes :: Integer -> [Fraction]
-coPrimes n = nub $ [ reduce (F p q) | p <- [-n..n], q <- [-n..n], q /= 0]
+fractionsN :: Integer -> [Fraction]
+fractionsN n = nub  [ reduce (F p q) | p <- [-n..n], q <- [-n..n]]
 -- Using recurrence relation
 farey :: Integer -> [Fraction]
 farey 1 = [F 0 1, F 1 1]
@@ -166,18 +166,4 @@ phi :: Integer -> Integer
 phi n = n * a `div` b  where
     (a, b) = foldr f  (1, 1)  (uniqueFactors n)
     f x (num, den)  = (num * (x -1), den * x)
-
-f1 =   [F (-3) 1,
-        F (-5) 2,
-        F (-2) 1,
-        F (-3) 2,
-        F (-1) 1,
-        F (-1) 2,
-        F 0 1,
-        F 1 2,
-        F 1 1,
-        F 3 2,
-        F 2 1,
-        F 5 2,
-        F 3 1]
 
