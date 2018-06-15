@@ -12,6 +12,7 @@ instance Eq Fraction where
 instance Ord Fraction where
     (<=) (F m n ) (F p q) =  m * q <= n * p
     (<)  (F m n ) (F p q) =  m * q < n * p
+
 reduce :: Fraction -> Fraction
 reduce (F p q)
     | q == 0 = F p 0
@@ -26,7 +27,8 @@ instance Monoid Fraction where
     mappend (F a b) (F c d) = F (a + c) (b + d)
 
 
-
+inv :: Fraction -> Fraction
+inv (F p q) = F q p
 
 eval :: Fraction -> Float
 eval (F n d) = fromIntegral n / fromIntegral d
