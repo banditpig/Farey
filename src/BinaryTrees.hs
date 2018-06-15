@@ -1,6 +1,7 @@
 module BinaryTrees where
-import           Data.List (sort)
-
+import           Data.List      (sort)
+import           Data.Tree
+import           Data.Tree.View
 data BTree a = Empty | BNode a (BTree a) (BTree a)
 
 instance Functor BTree where
@@ -8,14 +9,29 @@ instance Functor BTree where
     fmap f (BNode v Empty Empty ) = BNode (f v) Empty Empty
     fmap f (BNode v l r )         = BNode (f v) (fmap f l) (fmap f r)
 
+defaultNodeInfo :: (Show a) => a -> NodeInfo
+defaultNodeInfo a = NodeInfo InitiallyExpanded (show a) ""
 
-foldTree :: (a -> b) ->  BTree a -> [b]
-foldTree _ Empty         = []
-foldTree f (BNode v l r) = f v : foldTree f l ++ foldTree f r
+displayableBTree :: (a -> NodeInfo) -> BTree a -> BTree NodeInfo
+displayableBTree = fmap
 
-foldTreeNodes :: (a -> BTree a -> BTree a -> b) ->  BTree a -> [b]
-foldTreeNodes _ Empty         = []
-foldTreeNodes f (BNode v l r) = f v l r : foldTreeNodes f l ++ foldTreeNodes f r
+createSimpleHTMLTree :: (Show a) => FilePath -> BTree a -> IO ()
+createSimpleHTMLTree path tr = writeHtmlTree Nothing path tr' where
+        tr' = binaryToRose . displayableBTree defaultNodeInfo $ tr
+
+binaryToRose :: BTree a -> Tree a
+binaryToRose (BNode v Empty Empty ) = Node v []
+binaryToRose (BNode v l     Empty ) = Node v [binaryToRose l]
+binaryToRose (BNode v Empty r     ) = Node v [binaryToRose r]
+binaryToRose (BNode v l r )         = Node v [binaryToRose l, binaryToRose r]
+
+foldBTree :: (a -> b) ->  BTree a -> [b]
+foldBTree _ Empty         = []
+foldBTree f (BNode v l r) = f v : foldBTree f l ++ foldBTree f r
+
+foldBTreeNodes :: (a -> BTree a -> BTree a -> b) ->  BTree a -> [b]
+foldBTreeNodes _ Empty         = []
+foldBTreeNodes f (BNode v l r) = f v l r : foldBTreeNodes f l ++ foldBTreeNodes f r
 
 
 traverseDepthFirst :: BTree a -> [a]
@@ -120,26 +136,26 @@ layoutCompact t = t'
                 overlay xs []         = xs
                 overlay (x:xs) (y:ys) = x : overlay xs ys
 
-tree64 :: BTree Char
-tree64 = BNode 'n'
-                (BNode 'k'
-                        (BNode 'c'
-                                (BNode 'a' Empty Empty)
-                                (BNode 'h'
-                                        (BNode 'g'
-                                                (BNode 'e' Empty Empty)
+tree64 :: BTree String
+tree64 = BNode "n"
+                (BNode "k"
+                        (BNode "c"
+                                (BNode "a" Empty Empty)
+                                (BNode "h"
+                                        (BNode "g"
+                                                (BNode "e" Empty Empty)
                                                 Empty
                                         )
                                         Empty
                                 )
                         )
-                        (BNode 'm' Empty Empty)
+                        (BNode "m" Empty Empty)
                 )
-                (BNode 'u'
-                        (BNode 'p'
+                (BNode "u"
+                        (BNode "p"
                                 Empty
-                                (BNode 's'
-                                        (BNode 'q' Empty Empty)
+                                (BNode "s"
+                                        (BNode "q" Empty Empty)
                                         Empty
                                 )
                         )

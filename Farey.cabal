@@ -15,9 +15,9 @@ extra-source-files:  README.md
 
 executable Farey
   hs-source-dirs:      src
-  main-is:             ViewCircles.hs
+  main-is:             View.hs
   default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5 , gloss
+  build-depends:       base >= 4.7 && < 5 , gloss, containers, tree-view
   ghc-options:
         -O2
         -Wall
