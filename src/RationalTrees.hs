@@ -117,8 +117,6 @@ fractionPath  = go buildBrocTreeLazy  where
     go (BNode (_, frac, _) l r) (p:ps) = frac : go (pick p l r) ps where
         pick p l r = if p == L then l else r
 
-
-
 divides :: Integer -> Integer -> Bool
 divides d n = rem n d == 0
 
