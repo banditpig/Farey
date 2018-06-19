@@ -1,10 +1,24 @@
 module Rats where
+import           BinaryTrees
 import           Control.Applicative
 import           Data.List
 import           Data.Ratio
 import           Debug.Trace         (traceShow)
 import           Fractions
+import           RationalTrees
 traceShow' arg = traceShow arg arg
+
+--0, 1, 3, 6, 2, 7, 13, 20, 12, 21, 11, 22, 10, 23, 9, 24, 8, 25, 43
+--0, 1, 3, 6, 2, 7, 13, 20, 12, 21, 11, 22, 10, 23, 9, 24, 8, 25, 43,62
+racaman :: [Integer]
+racaman = 0 : go [0] 0 1 where
+    go used lastAdded ix = n' : go used' n' (ix + 1) where
+        used' = n':used
+        la_ix = lastAdded - ix
+        n' = if la_ix > 0 && notElem la_ix used
+             then la_ix
+             else lastAdded + ix
+
 
 toFraction :: Ratio Integer -> Fraction
 toFraction r = F (numerator r) (denominator r)
