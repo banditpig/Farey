@@ -33,7 +33,6 @@ foldBTreeNodes :: (a -> BTree a -> BTree a -> b) ->  BTree a -> [b]
 foldBTreeNodes _ Empty         = []
 foldBTreeNodes f (BNode v l r) = f v l r : foldBTreeNodes f l ++ foldBTreeNodes f r
 
-
 traverseDepthFirst :: BTree a -> [a]
 traverseDepthFirst Empty        = []
 traverseDepthFirst (BNode a l r) = a : traverseDepthFirst l ++ traverseDepthFirst r
@@ -111,18 +110,18 @@ prettyTree = unlines . layoutTree where
 type Pos = (Int, Int)
 layout :: BTree a -> BTree (a, Pos )
 layout t = fst (go 1 1 t)
-  where go x y Empty = (Empty, x)
+  where go x _ Empty = (Empty, x)
         go x y (BNode a l r) = (BNode (a, (x', y)) l' r', x'')
           where (l', x')  = go x (y + 1) l
                 (r', x'') = go (x' + 1) (y + 1) r
 
 layoutCompact :: BTree a -> BTree (a, Pos)
 layoutCompact t = t'
-  where (l, t', r) = layoutAux x1 1 t
+  where (l, t', _) = layoutAux x1 1 t
         x1 = maximum l + 1
 
         layoutAux :: Int -> Int -> BTree a -> ([Int], BTree (a, Pos), [Int])
-        layoutAux x y Empty = ([], Empty, [])
+        layoutAux _ _ Empty = ([], Empty, [])
         layoutAux x y (BNode a l r) = (ll', BNode (a, (x,y)) l' r', rr')
           where (ll, l', lr) = layoutAux (x - sep) (y+1) l
                 (rl, r', rr) = layoutAux (x + sep) (y+1) r
@@ -134,7 +133,7 @@ layoutCompact t = t'
                 overlay :: [a] -> [a] -> [a]
                 overlay [] ys         = ys
                 overlay xs []         = xs
-                overlay (x:xs) (y:ys) = x : overlay xs ys
+                overlay (x:xs) (_:ys) = x : overlay xs ys
 
 tree64 :: BTree String
 tree64 = BNode "n"
