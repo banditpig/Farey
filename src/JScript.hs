@@ -25,8 +25,8 @@ toNodeParentList = foldBTreeNodes f where
         f v (BNode vl _ _) (BNode vr _ _) = (v, Just vl, Just vr)
 
 
-goModel :: (Show a) => [(a, Maybe a, Maybe a)] -> String
-goModel  = foldr f ""  where
+goJSModel :: (Show a) => [(a, Maybe a, Maybe a)] -> String
+goJSModel  = foldr f ""  where
     f  (w, Just x,  Just y)  ac =
         concat [ "{key:", show w, ",parent:", show x,"},","{key:", show w, ",parent:", show y,"},", ac ]
     f  (w, Nothing, Just y)  ac =
@@ -38,11 +38,4 @@ goModel  = foldr f ""  where
 
 
 
-    -- ("n",Just "k",Just "u")
-    -- {key:"k", parent: "n"}, {key: "u", parent: "n"}
 
-
-
-    --   { key: "A" },
-      --   { key: "B", parent: "A" },
-      --   { key: "C", parent: "B" }
