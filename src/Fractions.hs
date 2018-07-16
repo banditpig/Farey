@@ -1,4 +1,5 @@
 module Fractions where
+import           Data.Monoid
 import           Data.Ratio
 data Fraction  = F Integer Integer
 

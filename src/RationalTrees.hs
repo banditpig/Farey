@@ -47,8 +47,7 @@ interleave (x:xs) ys = x : interleave ys xs
 interleave []     ys = ys
 
 
--- nearest left, value, nearest right
-type Data = (Fraction, Fraction, Fraction)
+
 
 mediant :: Fraction -> Fraction -> Fraction
 mediant (F a b) (F c d) = F (n `div` gDiv) (d `div` gDiv) where
@@ -57,6 +56,8 @@ mediant (F a b) (F c d) = F (n `div` gDiv) (d `div` gDiv) where
     gDiv = gcd n d
 
 
+-- nearest left, value, nearest right
+type Data = (Fraction, Fraction, Fraction)
 
 buildBrocTreeLazy :: BTree Data
 buildBrocTreeLazy = build (BNode (F 0 1, F 1 1, F 1 0) Empty Empty) where
@@ -65,11 +66,6 @@ buildBrocTreeLazy = build (BNode (F 0 1, F 1 1, F 1 0) Empty Empty) where
                         newRight  = BNode (fab, fab <> fxy, fxy) Empty Empty
             build (BNode nd l r)  = BNode nd (build l) (build r)
 
-buildBrocTree' :: Int -> BTree Fraction
-buildBrocTree' n = treeFromList
-                   . dropFirstLast           -- get rid of 0/ and 1/0
-                   . last                    -- the 'depth' of resulting tree
-                   . take n $ sternBrocList
 
 
 buildBrocTree :: Int -> BTree Data
@@ -90,6 +86,12 @@ buildBrocTreeSmaller = build (BNode (F 0 1, F 1 1, F 1 0) Empty Empty) where
                          newRight  = BNode (fab, fab <> fxy, fxy) Empty Empty
             build (BNode nd l r) n = BNode nd (build l n) (build r n)
 
+-- match out the 'important' fraction.
+fraction :: Data -> Fraction
+fraction (_, fr, _) = fr
+
+fractionsTree :: BTree Data -> BTree Fraction
+fractionsTree  = fmap fraction
 
 sternPath :: Fraction -> ([Fraction], SternPath)
 sternPath frac = (reverse fPath, reverse sPath) where
@@ -116,6 +118,7 @@ fractionPath  = go buildBrocTreeLazy  where
     go (BNode (_, frac, _) _ _) []     = [frac]
     go (BNode (_, frac, _) l r) (p:ps) = frac : go (pick p l r) ps where
         pick p l r = if p == L then l else r
+
 
 divides :: Integer -> Integer -> Bool
 divides d n = rem n d == 0

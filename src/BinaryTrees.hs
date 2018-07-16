@@ -2,28 +2,13 @@ module BinaryTrees where
 import           Data.List      (sort)
 import           Data.Tree
 import           Data.Tree.View
+
 data BTree a = Empty | BNode a (BTree a) (BTree a)
 
 instance Functor BTree where
     fmap _ Empty                  = Empty
     fmap f (BNode v Empty Empty ) = BNode (f v) Empty Empty
     fmap f (BNode v l r )         = BNode (f v) (fmap f l) (fmap f r)
-
-defaultNodeInfo :: (Show a) => a -> NodeInfo
-defaultNodeInfo a = NodeInfo InitiallyExpanded (show a) ""
-
-displayableBTree :: (a -> NodeInfo) -> BTree a -> BTree NodeInfo
-displayableBTree = fmap
-
-createSimpleHTMLTree :: (Show a) => FilePath -> BTree a -> IO ()
-createSimpleHTMLTree path tr = writeHtmlTree Nothing path tr' where
-        tr' = binaryToRose . displayableBTree defaultNodeInfo $ tr
-
-binaryToRose :: BTree a -> Tree a
-binaryToRose (BNode v Empty Empty ) = Node v []
-binaryToRose (BNode v l     Empty ) = Node v [binaryToRose l]
-binaryToRose (BNode v Empty r     ) = Node v [binaryToRose r]
-binaryToRose (BNode v l r )         = Node v [binaryToRose l, binaryToRose r]
 
 foldBTree :: (a -> b) ->  BTree a -> [b]
 foldBTree _ Empty         = []
@@ -75,9 +60,6 @@ width t = leftCount t + rightCount t where
         goRight (BNode _ _ Empty) n = n
         goRight (BNode _ _ r    ) n = goRight r (n + 1)
 
-
-
-
 treeFromList :: (Ord a) => [a] -> BTree a
 treeFromList lst = go (sort lst) where
         go [] = Empty
@@ -104,6 +86,21 @@ prettyTree = unlines . layoutTree where
     layoutTree Empty = []
     layoutTree (BNode v left  right) = indent (layoutTree right) ++ [show v] ++ indent (layoutTree left)
 
+defaultNodeInfo :: (Show a) => a -> NodeInfo
+defaultNodeInfo a = NodeInfo InitiallyExpanded (show a) ""
+
+displayableBTree :: (a -> NodeInfo) -> BTree a -> BTree NodeInfo
+displayableBTree = fmap
+
+createSimpleHTMLTree :: (Show a) => FilePath -> BTree a -> IO ()
+createSimpleHTMLTree path tr = writeHtmlTree Nothing path tr' where
+        tr' = binaryToRose . displayableBTree defaultNodeInfo $ tr
+
+binaryToRose :: BTree a -> Tree a
+binaryToRose (BNode v Empty Empty ) = Node v []
+binaryToRose (BNode v l     Empty ) = Node v [binaryToRose l]
+binaryToRose (BNode v Empty r     ) = Node v [binaryToRose r]
+binaryToRose (BNode v l r )         = Node v [binaryToRose l, binaryToRose r]
 
 -- x(v) is equal to the position of the node v in the inorder sequence
 -- y(v) is equal to the depth of the node v in the tree
