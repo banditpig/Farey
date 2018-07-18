@@ -5,11 +5,6 @@ import           Data.List
 import           Data.Monoid
 import           Fractions
 
--- data BTree a = Empty | BNode a (BTree a) (BTree a)
-data SternTerm = L | R deriving (Eq, Show)
-type SternPath = [SternTerm]
-
-
 dropFirstLast :: [a] -> [a]
 dropFirstLast xs@(_:_) = tail (init xs)
 dropFirstLast _        = []
@@ -92,33 +87,6 @@ fraction (_, fr, _) = fr
 
 fractionsTree :: BTree Data -> BTree Fraction
 fractionsTree  = fmap fraction
-
-sternPath :: Fraction -> ([Fraction], SternPath)
-sternPath frac = (reverse fPath, reverse sPath) where
-    (fPath, sPath) = go buildBrocTreeLazy fr  ([],[]) where
-        fr = reduce frac
-        go (BNode (_, F p q, _) l r) (F n d) (frs,path)
-            | p == n && q == d   = (F p q : frs, path)
-            | F p q < F n d      = go r fr (F p q : frs, R : path)
-            | otherwise          = go l fr (F p q : frs, L : path)
-
-sternPathFloat :: Float -> SternPath
-sternPathFloat  = go  where
-    go d
-        | d < 1 = L : go (d / (1 - d))
-        | otherwise = R : go (d - 1)
-
-fractionPathString :: String -> [Fraction]
-fractionPathString  = fractionPath . fmap (\x -> if x == 'L' then L else R)
-
-
-fractionPath :: SternPath -> [Fraction]
-fractionPath  = go buildBrocTreeLazy  where
-    go :: BTree Data -> SternPath -> [Fraction]
-    go (BNode (_, frac, _) _ _) []     = [frac]
-    go (BNode (_, frac, _) l r) (p:ps) = frac : go (pick p l r) ps where
-        pick p l r = if p == L then l else r
-
 
 divides :: Integer -> Integer -> Bool
 divides d n = rem n d == 0

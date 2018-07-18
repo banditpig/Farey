@@ -54,6 +54,6 @@ renderTree :: (Show a) => BTree a -> IO ()
 renderTree  = drawPics . mconcat . makePics 75 75 . layoutCompact
 
 main :: IO ()
-main = renderTree . buildBrocTree' $ 10
+main = renderTree . buildBrocTree $ 10
 -- main = renderTree . treeFromList $ [1..500]
 -- λ-> take 20 . fmap numer .  fractionPath . interleave (repeat L) $ (repeat R) -- FIB!
