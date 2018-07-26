@@ -9,54 +9,46 @@ import           RationalTrees
 data SternTerm = L | R deriving (Eq, Show)
 type SternPath = [SternTerm]
 
-
-data Matrix = M  Integer Integer Integer Integer deriving Show
+data Matrix = M Integer Integer Integer Integer deriving Show
 
 instance Monoid Matrix where
-    mempty = i -- Identity 2x2 matrix
+    mempty = ident -- Identity 2x2 matrix
+    -- matrix multiplication
     mappend (M a b c d) (M w x y z) =
         M (a*w + b*y) (a*x + b*z) (c*w + d*y) (c*x + d*z)
 
-l :: Matrix
-l = M 1 1 0 1
+left :: Matrix
+left = M 1 1 0 1
 
-r :: Matrix
-r = M 1 0 1 1
+right :: Matrix
+right = M 1 0 1 1
 
-i :: Matrix
-i = M 1 0 0 1
-
-frac1, frac2, frac3 :: Matrix -> Fraction
-frac1 (M a b c d) = F c a
-frac2 (M a b c d) = F b d
-frac3 (M a b c d) = F (c + d) (a + b)
+ident :: Matrix
+ident = M 1 0 0 1
 
 sternTermMatrix :: SternTerm -> Matrix
-sternTermMatrix t = if t == L then l else r
+sternTermMatrix t = if t == L then left else right
 
 reduceMatrix :: Matrix -> Fraction
 reduceMatrix (M a b c d) = F (c + d) (a + b)
 
 reduceSternPath :: SternPath -> Fraction
-reduceSternPath pth  = reduceMatrix $ foldl (\ acc t -> sternTermMatrix t <> acc )  i pth
+reduceSternPath   = reduceMatrix . foldl (\ acc t -> sternTermMatrix t <> acc ) ident
 
---reduceSternPath' :: SternPath -> Fraction
-reduceSternPath' = mconcat . fmap sternTermMatrix
+reduceSternPath' :: SternPath -> Fraction
+reduceSternPath' = reduceMatrix . mconcat . fmap sternTermMatrix
 
 
 sternPath :: Fraction -> SternPath
-sternPath frac = sPath where
-    sPath = go (fraction <$> buildBrocTreeLazy) fr  [] where
+sternPath frac = go (fraction <$> buildBrocTreeLazy) fr [] where
         fr = reduce frac
         go (BNode (F p q) l r) (F n d) path
             | p == n && q == d   = path
             | F p q < F n d      = go r fr (R : path)
             | otherwise          = go l fr (L : path)
 
-
-
-sternPathnm :: Fraction -> SternPath
-sternPathnm (F m n) = go m n  where
+sternPathNM :: Fraction -> SternPath
+sternPathNM (F m n) = go m n  where
     go m' n'
         | n' == m' = []
         | m' < n'   = L : go m' (n' - m')
